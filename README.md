@@ -30,7 +30,7 @@ GUILD_ID=your_discord_server_id
 ```
 ### 4. Register Slash Commands
 
-Run this to register the /removebg command to your server:
+Run this to register the `/removebg` command to your server:
 ```bash
 node deploy-commands.js
 ```
