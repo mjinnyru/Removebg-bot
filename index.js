@@ -1,63 +1,70 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, Events } = require('discord.js');
+const express = require('express');
 const axios = require('axios');
 const FormData = require('form-data');
-const fs = require('fs');
-const path = require('path');
-const express = require('express');
+
+// const fs = require('fs');
+// const path = require('path');
+
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+	intents: [GatewayIntentBits.Guilds],
 });
 
 client.once('ready', () => {
-  console.log(`Logged in as ${client.user.tag}`);
+	console.log(`Logged in as ${client.user.tag}`);
 });
 
-client.on('messageCreate', async (message) => {
-  if (!message.content.startsWith('!removebg') || message.author.bot) return;
+client.on(Events.InteractionCreate, async interaction => {
+	if (!interaction.isCommand()) return;
 
-  const attachment = message.attachments.first();
-  if (!attachment || !attachment.contentType.startsWith('image/')) {
-    return message.reply('Image where?🗡️(￣y▽￣)╭ Ohohoho..... use this ->`!removebg` ᓚᘏᗢ.');
-  }
+	if (interaction.commandName === 'removebg') {
+		const attachment = interaction.options.getAttachment('image');
 
-  const imageUrl = attachment.url;
-  try {
-    const form = new FormData();
-    form.append('image_url', imageUrl);
-    form.append('size', 'auto');
+		if (!attachment || !Attachment.contentType.startsWith('image/')) {
+			return interacction.reply({
+				content: 'Image where?🗡️(￣y▽￣)╭ Ohohoho..... use this ->`!removebg',
+				ephemeral: true,
+			});
+		}
 
-    const response = await axios.post('https://api.remove.bg/v1.0/removebg', form, {
-      headers: {
-        ...form.getHeaders(),
-        'X-Api-Key': process.env.REMOVEBG_API_KEY,
-      },
-      responseType: 'arraybuffer',
-    });
+		await interaction.deferReply();
 
-    const outputPath = path.join(__dirname, 'no-bg.png');
-    fs.writeFileSync(outputPath, response.data);
+		try {
+			const form = new FormData();
+			form.append('image_url', attachment.url);
+			form.append('size', 'auto');
 
-    await message.reply({
-      content: '✅ Jajan! ☆*: .｡. o(≧▽≦)o .｡.:*☆',
-      files: [outputPath],
-    });
+			const response = await axios.post('https://api.remove.bg/v1.0/removebg', form, {
+				headers: {
+					...form.getHeaders(),
+					'X-Api-Key': process.env.REMOVEBG_API_KEY,
+				},
+				responseType: 'arraybuffer',
+			});
 
-    fs.unlinkSync(outputPath);
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-    message.reply('(っ °Д °;)っ I think sth went wrong there. ');
-  }
+			await interaction.editReply({
+				content: '✅ Jajan! ☆*: .｡. o(≧▽≦)o .｡.:*☆',
+				files: [{
+					atachment: Buffer.from(response.data),
+					name: 'no-bg.png',
+				}],
+			});
+		} catch (error) {
+			console.error(error.response?.data || error.message);
+			interaction.editReply('(っ °Д °;)っ Uhhhhhh...I think sth went wrong there.');
+		}
+	}
 });
 
 client.login(process.env.DISCORD_TOKEN);
-const app = express();
 
+const app = express();
 app.get('/', (req, res) => {
-  res.send('Bot is alive!');
+	res.send('Bubu is still alive!');
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Web server is running on port ${PORT}`);
+	console.log(`Web server is running on port ${PORT}`)
 });
