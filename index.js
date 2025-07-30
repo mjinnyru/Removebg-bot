@@ -60,7 +60,7 @@ client.login(process.env.DISCORD_TOKEN);
 
 const app = express();
 app.get('/', (req, res) => {
-    res.send('Pupu is still alive!');
+    res.send('Bubu is still alive!');
 });
 
 const PORT = process.env.PORT || 3000;
